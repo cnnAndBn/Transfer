@@ -1,9 +1,10 @@
-torch                  1.3.1+cu100  -->9.2/10.0
-torchvision            0.4.2+cu100  -->9.2/10.0
-mmcv                   0.2.14
+torch                  1.3.1+cu9.2/10.0
+torchvision            0.4.2+cu9.2/10.0
+mmcv                   0.2.14 (* TBD)
 scipy                  1.1.0
 opencv-python          4.4.0.44
 Pillow                 8.0.1
+
 
 ----------------------------------
 torch                  1.5.1+cu101  no
@@ -19,7 +20,22 @@ pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonA
 安装
 
 
+ENV requirements:
+torch                  1.3.1+cu9.2/10.0
+torchvision            0.4.2+cu9.2/10.0
+mmcv                   0.2.14 (* TBD)
+scipy                  1.1.0
+opencv-python          4.4.0.44
+Pillow                 8.0.1
+gcc 7.5
+---------------------------------------------------------------
 1. funRouter : 功能选择模块
    deviceDetector：设备定位识别模块
 2. Install：
-
+   2.1 安装上述库
+   2.2 安装funRouter：进入funRouter,执行python setup.py  develop
+   2.3 安装deviceDetector：进入deviceDetector，
+       a. 进入lvis-api，执行python setup.py install
+       b. 进入进入deviceDetector目录，执行python setup.py  develop
+       
+       b. 进入deviceDetector目录，python setup.py  develop
