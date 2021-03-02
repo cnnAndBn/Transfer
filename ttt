@@ -1,0 +1,67 @@
+from myLib.basic_utility import *
+import os.path as osp
+import os
+import cv2
+import glob
+import numpy as np
+
+if __name__ == '__main__':
+
+    oriImgDir = r'D:\myProject\AutoPoster\data\dataset_V1\train\easy\img'
+    oriMaskDir = r'D:\myProject\AutoPoster\data\dataset_V1\train\easy\mask'
+    predDir = r'D:\myProject\AutoPoster\data\mask_retrain\train_easy'   # bb json and pred mask
+    dstDir = r'D:\myProject\AutoPoster\data\mask_retrain_crop'
+
+    dstDir = r'D:\myProject\AutoPoster\data\mask_retrain_crop'
+
+
+    if not osp.exists(osp.join(dstDir,'img')):
+        os.makedirs(osp.join(dstDir,'img'))
+
+
+    if not osp.exists(osp.join(dstDir,'predMask')):
+        os.makedirs(osp.join(dstDir,'predMask'))
+
+    if not osp.exists(osp.join(dstDir,'gtMask')):
+        os.makedirs(osp.join(dstDir,'gtMask'))
+
+
+    for f in os.listdir(predDir):
+
+        if osp.splitext(f)[1]=='.json':
+            jsonPath = osp.join(predDir,f)
+            bbs = load_json(jsonPath)
+
+            origImgName = f.replace('json','jpg')
+            oriImgPath = osp.join(oriImgDir,origImgName)  #原始图像路径
+            origImg = cv2.imread(oriImgPath)
+            #gt mask图像可能有多张，命名为原始图像名后面-1,-2,读取全部该图片的gt mask，然后合成一张图
+            oriMaskPathPattern = osp.join(oriMaskDir,'{}*.jpg'.format(osp.splitext(f)[0]))
+            oriMaskPaths=glob.glob(oriMaskPathPattern)
+            imgH,imgW = origImg.shape[:2]
+            oriMask = np.zeros((imgH,imgW),dtype=np.uint8)
+            for oriMaskPath in oriMaskPaths:
+                instanceOriMask = cv2.imread(oriMaskPath)[...,0]  # 三个通道相同
+                try:
+                   oriMask = oriMask|instanceOriMask
+                except:
+                    print(f)
+            predMaskPath = osp.join(predDir,osp.splitext(f)[0]+'_mask.jpg')
+            predMask = cv2.imread(predMaskPath,flags=cv2.IMREAD_GRAYSCALE)
+            #crop image
+            for i,bb in enumerate(bbs['bbox'],1):
+                bb = list(map(lambda x:int(x),bb))
+                x1,y1,x2,y2 = bb
+                cropOrigImg = origImg[y1:y2,x1:x2]
+                cropOrigMask = oriMask[y1:y2,x1:x2]
+                croppredMask = predMask[y1:y2,x1:x2]
+
+                if len(bbs['bbox'])>1:
+                    saveName = '{}-{}.jpg'.format(osp.splitext(f)[0],i)
+                else:
+                    saveName = f.replace('json','jpg')
+
+                cv2.imwrite(osp.join(dstDir,'img',saveName),cropOrigImg)
+                cv2.imwrite(osp.join(dstDir, 'predMask', saveName), croppredMask)
+                cv2.imwrite(osp.join(dstDir, 'gtMask', saveName), cropOrigMask)
+
